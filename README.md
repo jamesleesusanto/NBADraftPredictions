@@ -1,3 +1,5 @@
+# NBADraftPredictions
+
 ## Running the App Locally
 
 ##### **Option A: Run directly from RStudio**
