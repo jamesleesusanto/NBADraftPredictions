@@ -1,0 +1,10 @@
+shiny
+tidyverse
+hoopR
+stringr
+purrr
+dplyr
+plotly
+DT
+scales
+PRoc
