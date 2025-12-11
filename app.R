@@ -11,8 +11,8 @@ library(bslib)
 
 # Data Prep
 
-# nca_seasons <- 2021:2025
-# draft_years <- 2021:2025
+nca_seasons <- 2021:2025
+draft_years <- 2021:2025
 
 # message("Loading NCAA player data...")
 # player_games <- map_df(
@@ -161,7 +161,15 @@ library(bslib)
 
 # message("Data preparation complete!")
 
-readRDS("data.rds")
+
+data <- readRDS("data.rds")
+
+final_players <- data$final_players
+model <- data$model
+feature_importance <- data$feature_importance
+model_accuracy <- data$model_accuracy
+model_auc <- data$model_auc
+player_names_sorted <- data$player_names_sorted
 
 # ui (shiny)
 

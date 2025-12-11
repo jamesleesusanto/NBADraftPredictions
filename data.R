@@ -1,10 +1,10 @@
 # ## Loading in Data
 
-# library(tidyverse)
-# library(hoopR)
-# library(readr)
-# library(stringr)
-# library(purrr)
+library(tidyverse)
+library(hoopR)
+library(readr)
+library(stringr)
+library(purrr)
 
 
 
@@ -282,4 +282,14 @@ player_names_sorted <- sort(unique(final_players$athlete_display_name))
 
 message("Data preparation complete!")
 
-saveRDS(final_players, "data.rds")
+saveRDS(
+  list(
+    final_players = final_players,
+    model = model,
+    feature_importance = feature_importance,
+    model_accuracy = model_accuracy,
+    model_auc = model_auc,
+    player_names_sorted = player_names_sorted
+  ),
+  "data.rds"
+)
