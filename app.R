@@ -14,153 +14,6 @@ library(bslib)
 nca_seasons <- 2021:2025
 draft_years <- 2021:2025
 
-# message("Loading NCAA player data...")
-# player_games <- map_df(
-#   nca_seasons,
-#   ~ load_mbb_player_box(seasons = .x)
-# )
-
-# if (nrow(player_games) == 0) stop("NCAA API returned no data.")
-
-# player_clean <- player_games |>
-#   filter(!is.na(points), minutes > 0) |>
-#   select(
-#     season, athlete_id, athlete_display_name, team_display_name,
-#     minutes, points, rebounds, assists, steals, blocks,
-#     field_goals_made, field_goals_attempted,
-#     three_point_field_goals_made, three_point_field_goals_attempted,
-#     free_throws_made, free_throws_attempted
-#   )
-
-# season_stats <- player_clean |>
-#   group_by(season, athlete_id, athlete_display_name, team_display_name) |>
-#   summarize(
-#     games = n(),
-#     mpg = mean(minutes, na.rm = TRUE),
-#     ppg = mean(points, na.rm = TRUE),
-#     rpg = mean(rebounds, na.rm = TRUE),
-#     apg = mean(assists, na.rm = TRUE),
-#     spg = mean(steals, na.rm = TRUE),
-#     bpg = mean(blocks, na.rm = TRUE),
-#     fg_pct = sum(field_goals_made, na.rm = TRUE) /
-#         sum(field_goals_attempted, na.rm = TRUE),
-#     three_pct = sum(three_point_field_goals_made, na.rm = TRUE) /
-#       sum(three_point_field_goals_attempted, na.rm = TRUE),
-#     ft_pct = sum(free_throws_made, na.rm = TRUE) /
-#         sum(free_throws_attempted, na.rm = TRUE),
-#     .groups = "drop"
-#   ) |>
-#   mutate(
-#     fg_pct = replace_na(fg_pct, 0),
-#     three_pct = replace_na(three_pct, 0),
-#     ft_pct = replace_na(ft_pct, 0)
-#   )
-
-# clean_name <- function(x) {
-#   x |>
-#     stringr::str_to_lower() |>
-#     stringr::str_replace_all("[[:punct:]]", "") |>
-#     stringr::str_replace_all("\\s+", " ") |>
-#     stringr::str_replace_all("\\b(jr|sr|i|ii|iii|iv|v)$", "") |>
-#     stringr::str_replace_all("\\bjunior\\b", "") |>
-#     stringr::str_replace_all("\\bsenior\\b", "") |>
-#     stringr::str_trim() |>
-#     stringr::str_squish()
-# }
-
-# season_stats <- season_stats |>
-#   mutate(clean_name = clean_name(athlete_display_name))
-
-# message("Loading NBA draft data...")
-# draft_list <- purrr::map(
-#   draft_years,
-#   ~ nba_drafthistory(season = .x)$DraftHistory
-# )
-
-# draft_all <- bind_rows(draft_list)
-
-# draft_clean <- draft_all |>
-#   filter(ORGANIZATION_TYPE == "College/University") |>
-#   mutate(
-#     draft_season = as.integer(SEASON),
-#     overall_pick = as.integer(OVERALL_PICK),
-#     draft_round = as.integer(ROUND_NUMBER),
-#     draft_team = TEAM_NAME,
-#     college = ORGANIZATION,
-#     draft_clean_name = clean_name(PLAYER_NAME)
-#   ) |>
-#   select(
-#     draft_season,
-#     overall_pick,
-#     draft_round,
-#     draft_team,
-#     college,
-#     draft_clean_name
-#   )
-
-# data_joined <- season_stats |>
-#   left_join(draft_clean, by = c("clean_name" = "draft_clean_name")) |>
-#   mutate(drafted = if_else(!is.na(overall_pick), 1L, 0L))
-
-# matched_count <- sum(!is.na(data_joined$overall_pick))
-# total_draft <- nrow(draft_clean)
-# message(paste0("Draft matching: ", 
-#     matched_count, " of ", 
-#     total_draft, 
-#     " drafted players matched to NCAA stats"))
-
-# final_players <- data_joined |>
-#   group_by(athlete_id) |>
-#   filter(season == max(season)) |>
-#   ungroup()
-
-# message("Training prediction model...")
-# model <- glm(
-#   drafted ~ ppg + rpg + apg + spg + bpg + mpg,
-#   data = final_players,
-#   family = binomial()
-# )
-
-# coef_summary <- summary(model)$coefficients
-# feature_importance <- tibble(
-#   feature = rownames(coef_summary)[-1],
-#   coefficient = coef_summary[-1, "Estimate"],
-#   std_error = coef_summary[-1, "Std. Error"],
-#   z_value = coef_summary[-1, "z value"],
-#   p_value = coef_summary[-1, "Pr(>|z|)"]
-# ) |>
-#   mutate(
-#     feature_label = case_when(
-#       feature == "ppg" ~ "Points Per Game",
-#       feature == "rpg" ~ "Rebounds Per Game",
-#       feature == "apg" ~ "Assists Per Game",
-#       feature == "spg" ~ "Steals Per Game",
-#       feature == "bpg" ~ "Blocks Per Game",
-#       feature == "mpg" ~ "Minutes Per Game"
-#     ),
-#     abs_coefficient = abs(coefficient),
-#     odds_ratio = exp(coefficient),
-#     significance = case_when(
-#       p_value < 0.001 ~ "***",
-#       p_value < 0.01 ~ "**",
-#       p_value < 0.05 ~ "*",
-#       TRUE ~ "ns"
-#     )
-#   ) |>
-#   arrange(desc(abs_coefficient))
-
-# final_players <- final_players |>
-#   mutate(pred_prob = predict(model, newdata = final_players, type = "response"))
-
-# model_predictions <- predict(model, type = "response")
-# model_actual <- final_players$drafted
-# model_auc <- pROC::auc(pROC::roc(model_actual, model_predictions, quiet = TRUE))
-# model_accuracy <- mean(ifelse(model_predictions > 0.5, 1, 0) == model_actual)
-
-# player_names_sorted <- sort(unique(final_players$athlete_display_name))
-
-# message("Data preparation complete!")
-
 
 data <- readRDS("data.rds")
 
@@ -170,6 +23,57 @@ feature_importance <- data$feature_importance
 model_accuracy <- data$model_accuracy
 model_auc <- data$model_auc
 player_names_sorted <- data$player_names_sorted
+
+
+# star system function
+
+get_star_rating <- function(percentile) {
+  if (percentile >= 99.5) {
+    return(list(stars = 5, label = "Elite / Lottery Lock"))
+  } else if (percentile >= 99.3) {
+    return(list(stars = 4.5, label = "Lottery Range"))
+  } else if (percentile >= 99.0) {
+    return(list(stars = 4, label = "First Round"))
+  } else if (percentile >= 98.5) {
+    return(list(stars = 3.5, label = "Late First / Early Second"))
+  } else if (percentile >= 97.5) {
+    return(list(stars = 3, label = "Second Round"))
+  } else if (percentile >= 96) {
+    return(list(stars = 2.5, label = "Fringe Draftable"))
+  } else if (percentile >= 93) {
+    return(list(stars = 2, label = "On the Radar"))
+  } else if (percentile >= 85) {
+    return(list(stars = 1.5, label = "Long Shot"))
+  } else {
+    return(list(stars = 1, label = "Unlikely"))
+  }
+}
+
+# html for stars
+render_stars <- function(star_count) {
+  full_stars <- floor(star_count)
+  half_star <- (star_count %% 1) >= 0.5
+  empty_stars <- 5 - ceiling(star_count)
+  
+  stars_html <- ""
+  if (full_stars > 0) {
+    for (i in seq_len(full_stars)) {
+      stars_html <- paste0(stars_html, "<span style='color: #ffc107; font-size: 24px;'>★</span>")
+    }
+  }
+  if (half_star) {
+    stars_html <- paste0(stars_html, "<span style='position: relative; display: inline-block; font-size: 24px;'>",
+                         "<span style='color: #e0e0e0;'>★</span>",
+                         "<span style='position: absolute; left: 0; top: 0; width: 50%; overflow: hidden; color: #ffc107;'>★</span>",
+                         "</span>")
+  }
+  if (empty_stars > 0) {
+    for (i in seq_len(empty_stars)) {
+      stars_html <- paste0(stars_html, "<span style='color: #e0e0e0; font-size: 24px;'>★</span>")
+    }
+  }
+  return(stars_html)
+}
 
 # ui (shiny)
 
@@ -772,31 +676,29 @@ server <- function(input, output, session) {
   
   # outputs tb 3
   output$player_header_card <- renderUI({
-    stats <- current_stats()
-    prob <- draft_prob()
-    prob_color <- if(prob > 0.5) "#28a745" else if(prob > 0.2) "#ffc107" else "#dc3545"
-    draft_info <- if (!is.na(stats$drafted) && stats$drafted == 1) {
-      paste0("<span class='draft-badge drafted'>✓ DRAFTED - Pick #", stats$overall_pick, " (Round ", stats$draft_round, ") by ", stats$draft_team, "</span>")
+    stats <- current_stats(); prob <- draft_prob(); percentile <- mean(final_players$pred_prob <= prob) * 100
+    star_info <- get_star_rating(percentile); stars_html <- render_stars(star_info$stars)
+    prob_color <- if(star_info$stars >= 4) "#28a745" else if(star_info$stars >= 3) "#ffc107" else "#dc3545"
+    draft_info <- if (!is.na(stats$drafted) && stats$drafted == 1) { paste0("<span class='draft-badge drafted'>✓ DRAFTED - Pick #", stats$overall_pick, " (Round ", stats$draft_round, ") by ", stats$draft_team, "</span>")
     } else if (!is.na(stats$drafted)) { "<span class='draft-badge undrafted'>Not Drafted</span>" } else { "" }
     HTML(paste0(
       "<div class='player-card'><div style='display: flex; justify-content: space-between; align-items: center;'>",
       "<div><div class='player-name'>", stats$athlete_display_name, "</div>",
-      "<div class='player-team'>", stats$team_display_name, if(!is.na(stats$season)) paste0(" | Season: ", stats$season) else "", "</div>",
-      draft_info, "</div>",
-      "<div style='text-align: right;'><div style='font-size: 48px; font-weight: 700; color: ", prob_color, ";'>",
-      round(prob * 100, 1), "%</div><div class='metric-label'>Draft Probability</div>",
-      "<div class='prob-meter'><div class='prob-fill' style='width: ", prob * 100, "%; background: ", prob_color, ";'></div></div></div></div></div>"
-    ))
+      "<div class='player-team'>", stats$team_display_name, if(!is.na(stats$season)) paste0(" | Season: ", stats$season) else "", "</div>", draft_info, "</div>",
+      "<div style='text-align: center; min-width: 280px;'>",
+      "<div style='margin-bottom: 8px;'>", stars_html, "</div>",
+      "<div style='font-size: 16px; font-weight: 600; color: ", prob_color, "; margin-bottom: 5px;'>", star_info$label, "</div>",
+      "<div style='font-size: 42px; font-weight: 700; color: #1e3c72;'>", round(percentile, 1), "<span style='font-size: 20px;'>th</span></div>",
+      "<div class='metric-label'>Percentile</div>",
+      "<div style='margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;'>",
+
+      
+      "</div></div></div></div>"))
   })
   
   output$player_probability_explanation <- renderUI({
-    prob <- draft_prob()
-    percentile <- mean(final_players$pred_prob <= prob) * 100
-    HTML(paste0(
-      "<strong>What does this probability mean?</strong><br>",
-      "Based on historical data, a player with these stats has a <strong>", round(prob * 100, 1), "%</strong> chance of being drafted. ",
-      "This places them in the <strong>", round(percentile, 1), "th percentile</strong> among all NCAA players."
-    ))
+    prob <- draft_prob(); percentile <- mean(final_players$pred_prob <= prob) * 100; star_info <- get_star_rating(percentile)
+    HTML(paste0("<strong>What does ", star_info$stars, " stars mean?</strong><br>This player is in the <strong>", round(percentile, 1), "th percentile</strong> among all NCAA players — rated as \"<strong>", star_info$label, "</strong>\". "))
   })
   
   output$radar_chart <- renderPlotly({
@@ -886,17 +788,44 @@ server <- function(input, output, session) {
     req(input$show_comparison)
     stats1 <- current_stats(); stats2 <- compare_stats()
     prob1 <- draft_prob(); prob2 <- compare_prob()
+
+
+    
+    percentile1 <- mean(final_players$pred_prob <= prob1) * 100
+    percentile2 <- mean(final_players$pred_prob <= prob2) * 100
+
+    star_info1 <- get_star_rating(percentile1)
+    star_info2 <- get_star_rating(percentile2)
+
+    prob_color1 <- if(star_info1$stars >= 4) "#28a745" else if(star_info1$stars >= 3) "#ffc107" else "#dc3545"
+    prob_color2 <- if(star_info2$stars >= 4) "#28a745" else if(star_info2$stars >= 3) "#ffc107" else "#dc3545"
+  
+    stars_html1 <- render_stars(star_info1$stars)
+    stars_html2 <- render_stars(star_info2$stars)
+
     HTML(paste0(
+      # left card
+
       "<div style='display: flex; justify-content: space-around; align-items: center; padding: 20px;'>",
       "<div class='player-card' style='flex: 1; margin: 10px; text-align: center;'>",
       "<div class='player-name'>", stats1$athlete_display_name, "</div>",
       "<div class='player-team'>", stats1$team_display_name, "</div>",
-      "<div style='font-size: 36px; font-weight: 700; color: #2a5298; margin-top: 10px;'>", round(prob1 * 100, 1), "%</div></div>",
+      # "<div style='font-size: 36px; font-weight: 700; color: #2a5298; margin-top: 10px;'>", round(prob1 * 100, 1), "%</div></div>",
+      "<div style='margin-bottom: 8px;'>", stars_html1, "</div>",
+      "<div style='font-size: 16px; font-weight: 600; color: ", prob_color1, "; margin-bottom: 5px;'>", star_info1$label, "</div>",
+      "</div>",
+
       "<div class='comparison-vs'>VS</div>",
+      
+      #Right card
       "<div class='player-card' style='flex: 1; margin: 10px; text-align: center;'>",
       "<div class='player-name'>", stats2$athlete_display_name, "</div>",
       "<div class='player-team'>", stats2$team_display_name, "</div>",
-      "<div style='font-size: 36px; font-weight: 700; color: #764ba2; margin-top: 10px;'>", round(prob2 * 100, 1), "%</div></div></div>"
+      # "<div style='font-size: 36px; font-weight: 700; color: #764ba2; margin-top: 10px;'>", round(prob2 * 100, 1), "%</div></div></div>"
+      "<div style='margin-bottom: 8px;'>", stars_html2, "</div>",
+      "<div style='font-size: 16px; font-weight: 600; color: ", prob_color2, "; margin-bottom: 5px;'>", star_info2$label, "</div>",
+      "</div>"
+    
     ))
   })
   
