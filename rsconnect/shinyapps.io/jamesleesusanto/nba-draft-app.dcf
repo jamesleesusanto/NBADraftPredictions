@@ -1,0 +1,10 @@
+name: nba-draft-app
+title:
+username: jamesleesusanto
+account: jamesleesusanto
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 16304838
+bundleId: 11316169
+url: https://jamesleesusanto.shinyapps.io/nba-draft-app/
+version: 1
