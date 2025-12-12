@@ -140,7 +140,7 @@ NBADraftPredictions/
 
 ## Deployment
 
-[Shiny App](https://jamesleesusanto.shinyapps.io/nba-draft-app/)
+[Shiny App](https://www.shinyapps.io/)
 
 [URL](https://jamesleesusanto.shinyapps.io/nba-draft-app/)
 
