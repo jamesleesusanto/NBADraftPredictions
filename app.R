@@ -645,15 +645,15 @@ server <- function(input, output, session) {
       df <- df |> arrange(overall_pick) |>
         select(Player = athlete_display_name, College = team_display_name, Season = season, `Pick #` = overall_pick,
                Round = draft_round, `NBA Team` = draft_team, PPG = ppg, RPG = rpg, APG = apg, SPG = spg, BPG = bpg, MPG = mpg,
-               Games = games, `Pred. Prob` = pred_prob) |>
+               Games = games) |>
         mutate(PPG = round(PPG, 1), RPG = round(RPG, 1), APG = round(APG, 1), SPG = round(SPG, 1), BPG = round(BPG, 1),
-               MPG = round(MPG, 1), `Pred. Prob` = paste0(round(`Pred. Prob` * 100, 1), "%"))
+               MPG = round(MPG, 1))
     } else {
       df <- df |> arrange(desc(pred_prob)) |>
         select(Player = athlete_display_name, College = team_display_name, Season = season, Drafted = drafted,
-               PPG = ppg, RPG = rpg, APG = apg, SPG = spg, BPG = bpg, MPG = mpg, Games = games, `Pred. Prob` = pred_prob) |>
+               PPG = ppg, RPG = rpg, APG = apg, SPG = spg, BPG = bpg, MPG = mpg, Games = games, ) |>
         mutate(Drafted = ifelse(Drafted == 1, "Yes", "No"), PPG = round(PPG, 1), RPG = round(RPG, 1), APG = round(APG, 1),
-               SPG = round(SPG, 1), BPG = round(BPG, 1), MPG = round(MPG, 1), `Pred. Prob` = paste0(round(`Pred. Prob` * 100, 1), "%"))
+               SPG = round(SPG, 1), BPG = round(BPG, 1), MPG = round(MPG, 1))
     }
     datatable(df, options = list(pageLength = 20, scrollX = TRUE), rownames = FALSE, filter = 'top')
   })
