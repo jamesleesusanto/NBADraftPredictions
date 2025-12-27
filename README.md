@@ -12,7 +12,7 @@ An interactive R Shiny application that uses logistic regression to predict NBA 
 This app analyzes over **27,000 NCAA players** from 2021-2025 seasons and matches them against actual NBA draft results to identify which performance metrics best predict draft selection. The model achieves:
 
 - **99.1% Accuracy** (note: baseline is ~99% since only ~1% of players get drafted)
-- **0.94 AUC-ROC Score** (strong discriminative ability)
+- **0.91 AUC-ROC Score** (strong discriminative ability)
 - **4 statistically significant predictors** identified (p < 0.001)
 
 ## Key Findings
